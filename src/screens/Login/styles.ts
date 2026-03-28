@@ -11,21 +11,21 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 34,
     fontWeight: 'bold',
-    top:-280
+    top:'-42%'
   },
   logo:{
-    top: -168,
-    width: 370
+    top: '-25%',
+    width: '80%'
   },
   inputEmail:{
     backgroundColor: '#FFF',
-    padding: 8,
+    padding: 6,
     borderRadius: 10,
     marginBottom: 16,
     width:285,
-    textAlign:'center',
     textAlignVertical:'center',
-    top:-250,
+    textAlign:'center',
+    top:'-38%',
     height:50,
      fontSize: 20,
     fontFamily: 'Inter_700Bold',
@@ -41,11 +41,11 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     fontSize: 20,
     textAlign:'center',
+    textAlignVertical:'center',
     width:285,
-    top:-230,
+    top:'-35%',
     color: '#000000',
-    fontFamily: 'Inter_700Bold',
-   
+    fontFamily: 'Inter_700Bold',   
     borderWidth: 1,
     borderColor: '#000000',
   },
@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
   buttonLogin:{
     backgroundColor: '#E53935',
      borderRadius: 150,
-    top:-150,
+    top:'-28%',
     width:160,
     height:40,
     alignItems: 'center',
@@ -113,6 +113,7 @@ const styles = StyleSheet.create({
   justifyContent: 'center',
   alignItems: 'center',
   marginRight: 8,
+  top:'-170%'
 
   },
 
@@ -124,6 +125,7 @@ const styles = StyleSheet.create({
   },
   rememberText:{
     fontFamily: 'Inter_700Bold',
+    top:'-170%'
 
   },
 

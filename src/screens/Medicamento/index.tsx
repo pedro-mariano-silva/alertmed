@@ -1,143 +1,215 @@
 import { View, Text, Image, TouchableOpacity, FlatList } from 'react-native';
-import { useState, useEffect } from 'react';
-import { useNavigation } from '@react-navigation/native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RootStackParamList } from '../../navigation/types';
 import styles from './styles';
 
 type NavigationProps = NativeStackNavigationProp<RootStackParamList, 'Medicamento'>;
 
-export default function Medicamento(){
-  
+type MedicamentoItem = {
+  id: string;
+  nome: string;
+  dosagem: string;
+  horarios: string[];
+  diasSelecionados?: string[];
+};
 
-const navigation = useNavigation<any>();
+type ProximoMedicamento = {
+  nome: string;
+  horario: string;
+} | null;
 
-const [medicamentos, setMedicamentos] = useState([]);
+const STORAGE_KEY = '@alertmed_medicamentos';
 
+export default function Medicamento() {
+  const navigation = useNavigation<NavigationProps>();
 
-useEffect(() => {
-  carregarMedicamentos();
-}, []);
+  const [medicamentos, setMedicamentos] = useState<MedicamentoItem[]>([]);
+  const [proximoMedicamento, setProximoMedicamento] = useState<ProximoMedicamento>(null);
 
-function carregarMedicamentos(){
+  useEffect(() => {
+    carregarMedicamentosSalvos();
+  }, []);
 
-  const dados = [
-    {
-      id: '1',
-      nome: 'Dipirona',
-      dosagem: '500 mg',
-      horarios: '08:00, 14:00, 20:00, 02:00',
-    },
-    {
-      id: '2',
-      nome: 'Omeprazol',
-      dosagem: '20 mg',
-      horarios: 'Todos os dias às 08:00',
-    },
-  ];
+  useFocusEffect(
+    useCallback(() => {
+      carregarMedicamentosSalvos();
+    }, [])
+  );
 
-  setMedicamentos(dados);
-}
+  useEffect(() => {
+    atualizarProximoMedicamento(medicamentos);
+  }, [medicamentos]);
 
-function deletarMedicamento(id){
+  async function carregarMedicamentosSalvos() {
+    try {
+      const dadosSalvos = await AsyncStorage.getItem(STORAGE_KEY);
 
-const novaLista = medicamentos.filter(item => item.id !== id);
+      if (dadosSalvos) {
+        const lista: MedicamentoItem[] = JSON.parse(dadosSalvos);
+        setMedicamentos(lista);
+      } else {
+        setMedicamentos([]);
+      }
+    } catch (error) {
+      console.log('Erro ao carregar medicamentos:', error);
+    }
+  }
 
-setMedicamentos(novaLista);
+  async function salvarMedicamentos(lista: MedicamentoItem[]) {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(lista));
+    } catch (error) {
+      console.log('Erro ao salvar medicamentos:', error);
+    }
+  }
 
-}
+  async function deletarMedicamento(id: string) {
+    const novaLista = medicamentos.filter((item) => item.id !== id);
+    setMedicamentos(novaLista);
+    await salvarMedicamentos(novaLista);
+  }
 
-return (
+  function formatarHorarios(horarios: string[]) {
+    return horarios.join(', ');
+  }
 
-<View style={styles.container}>
+  function formatarDias(dias?: string[]) {
+    if (!dias || dias.length === 0) {
+      return '';
+    }
 
-{/* BOTÃO + */}
-<TouchableOpacity
-onPress={() => navigation.navigate('Novomedicamento')}
-activeOpacity={0.7}
-style={{ position: 'absolute', top: 70, right: 20, zIndex: 10 }}
->
+    return dias.join(', ');
+  }
 
-<Image
-source={require('../../../assets/images/plus.png')}
-style={{ width: 40, height: 40 }}
-resizeMode="contain"
-/>
+  function obterDiaAtual(): string {
+    const diasSemana = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB'];
+    const hoje = new Date();
+    return diasSemana[hoje.getDay()];
+  }
 
-</TouchableOpacity>
-{/* TÍTULO */}
-<Text style={styles.titleMedicamento}>
-Meus Medicamentos
-</Text>
+  function converterHorarioParaMinutos(horario: string): number {
+    const [hora, minuto] = horario.split(':').map(Number);
+    return hora * 60 + minuto;
+  }
 
-{/* LISTA */}
-<FlatList
-data={medicamentos}
-keyExtractor={(item) => item.id}
-showsVerticalScrollIndicator={false}
+  function atualizarProximoMedicamento(lista: MedicamentoItem[]) {
+    const agora = new Date();
+    const diaAtual = obterDiaAtual();
+    const minutosAtuais = agora.getHours() * 60 + agora.getMinutes();
 
-renderItem={({ item }) => (
+    let proximo: { nome: string; horario: string; diferenca: number } | null = null;
 
-<View style={styles.card}>
+    lista.forEach((medicamento) => {
+      const dias = medicamento.diasSelecionados || [];
+      const medicamentoValeHoje = dias.length === 0 || dias.includes(diaAtual);
 
-<View style={styles.cardLeft}>
+      if (!medicamentoValeHoje) {
+        return;
+      }
 
-<Image
-source={require('../../../assets/images/capsule.png')}
-style={styles.capsule}
-/>
+      medicamento.horarios.forEach((horario) => {
+        const minutosHorario = converterHorarioParaMinutos(horario);
+        let diferenca = minutosHorario - minutosAtuais;
 
-<View>
+        if (diferenca < 0) {
+          diferenca += 24 * 60;
+        }
 
-<Text style={styles.nome}>
-{item.nome}
-</Text>
+        if (!proximo || diferenca < proximo.diferenca) {
+          proximo = {
+            nome: medicamento.nome,
+            horario,
+            diferenca,
+          };
+        }
+      });
+    });
 
-<Text style={styles.dosagem}>
-{item.dosagem}
-</Text>
+    if (proximo) {
+      setProximoMedicamento({
+        nome: proximo.nome,
+        horario: proximo.horario,
+      });
+    } else {
+      setProximoMedicamento(null);
+    }
+  }
 
-<Text style={styles.horarios}>
-{item.horarios}
-</Text>
+  return (
+    <View style={styles.container}>
+      <TouchableOpacity
+        onPress={() => navigation.navigate('Novomedicamento')}
+        activeOpacity={0.7}
+        style={{ position: 'absolute', top: 70, right: 20, zIndex: 10 }}
+      >
+        <Image
+          source={require('../../../assets/images/plus.png')}
+          style={{ width: 40, height: 40 }}
+          resizeMode="contain"
+        />
+      </TouchableOpacity>
 
-</View>
+      <Text style={styles.titleMedicamento}>Meus Medicamentos</Text>
 
-</View>
+      <FlatList
+        data={medicamentos}
+        keyExtractor={(item) => item.id}
+        showsVerticalScrollIndicator={false}
+        renderItem={({ item }) => (
+          <View style={styles.card}>
+            <View style={styles.cardLeft}>
+              <Image
+                source={require('../../../assets/images/capsule.png')}
+                style={styles.capsule}
+              />
 
-{/* BOTÃO DELETE */}
-<TouchableOpacity
-onPress={() => deletarMedicamento(item.id)}
->
+              <View>
+                <Text style={styles.nome}>{item.nome}</Text>
+                <Text style={styles.dosagem}>{item.dosagem}</Text>
 
-<Image
-source={require('../../../assets/images/delete.png')}
-style={styles.delete}
-/>
+                <Text style={styles.horarios}>
+                  Horários: {formatarHorarios(item.horarios)}
+                </Text>
 
-</TouchableOpacity>
+                {item.diasSelecionados && item.diasSelecionados.length > 0 && (
+                  <Text style={styles.horarios}>
+                    Dias: {formatarDias(item.diasSelecionados)}
+                  </Text>
+                )}
+              </View>
+            </View>
 
-</View>
+            <TouchableOpacity onPress={() => deletarMedicamento(item.id)}>
+              <Image
+                source={require('../../../assets/images/delete.png')}
+                style={styles.delete}
+              />
+            </TouchableOpacity>
+          </View>
+        )}
+        ListEmptyComponent={
+          <Text style={{ textAlign: 'center', marginTop: 30 }}>
+            Nenhum medicamento cadastrado.
+          </Text>
+        }
+      />
 
-)}
-/>
+      <TouchableOpacity style={styles.buttonMedicamento}>
+        <Image
+          source={require('../../../assets/images/time.png')}
+          style={styles.timeImage}
+          resizeMode="contain"
+        />
 
-{/* PRÓXIMO MEDICAMENTO */}
-<TouchableOpacity style={styles.buttonMedicamento}>
-
-<Image
-source={require('../../../assets/images/time.png')}
-style={styles.timeImage}
-resizeMode="contain"
-/>
-
-<Text style={styles.buttonText}>
-Próximo: Omeprazol às 08:00
-</Text>
-
-</TouchableOpacity>
-
-</View>
-
-);
+        <Text style={styles.buttonText}>
+          {proximoMedicamento
+            ? `Próximo: ${proximoMedicamento.nome} às ${proximoMedicamento.horario}`
+            : 'Nenhum medicamento programado'}
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
 }

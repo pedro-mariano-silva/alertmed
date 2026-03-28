@@ -13,9 +13,29 @@ type NavigationProps = NativeStackNavigationProp<
 
 export default function Login() {
 
-const navigation = useNavigation<NavigationProps>();const [usuario, setUsuario] = useState('');
+const navigation = useNavigation<NavigationProps>();
+const [usuario, setUsuario] = useState('');
 const [senha, setSenha] = useState('');
 const [lembrar, setLembrar] = useState(false);
+const [mostrarCursor, setMostrarCursor] = useState(false);
+
+const handleChangeUser = (text: string) => {
+  setUsuario(text);
+
+  if (text.length === 0) {
+    setMostrarCursor(false);
+  }
+};
+
+const handleChangeSenha = (text: string) => {
+  setSenha(text);
+
+  if (text.length === 0) {
+    setMostrarCursor(false);
+  }
+};
+
+
 
 useEffect(() => {
 carregarUsuario();
@@ -69,10 +89,17 @@ placeholder="E-mail"
 placeholderTextColor="#000000"
 style={styles.inputEmail}
 value={usuario}
-onChangeText={setUsuario}
-caretHidden={true}
+onChangeText={handleChangeUser}
 keyboardType="email-address"
 autoCapitalize="none"
+textAlign='center'
+  selection={usuario.length === 0 ? { start: 0, end: 0 } : undefined}
+
+caretHidden={!mostrarCursor}   //  controla o cursor
+onFocus={() => setMostrarCursor(true)}   // mostra ao clicar
+onBlur={() => setMostrarCursor(false)}   // esconde ao sair
+
+
 />
 
 <TextInput
@@ -82,8 +109,12 @@ style={styles.inputSenha}
 value={senha}
 onChangeText={setSenha}
 secureTextEntry={true}
-caretHidden={true}
+
 autoCapitalize="none"
+caretHidden={!mostrarCursor}   //  controla o cursor
+onFocus={() => setMostrarCursor(true)}   // mostra ao clicar
+onBlur={() => setMostrarCursor(false)}   // esconde ao sair
+selection={senha.length === 0 ? { start: 0, end: 0 } : undefined}
 />
 
 <TouchableOpacity
