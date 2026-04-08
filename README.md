@@ -1,6 +1,6 @@
 # 💊 AlertMed
 
-Aplicativo mobile para **controle de horários de medicação**, permitindo cadastrar medicamentos, definir horários e acompanhar o próximo remédio a ser tomado.
+Aplicativo mobile voltado para Android para **controle de horários de medicação**, permitindo cadastrar medicamentos, definir horários e acompanhar o próximo remédio a ser tomado.
 
 Projeto desenvolvido com **React Native + Expo**.
 
