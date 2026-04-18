@@ -15,7 +15,7 @@ export default function SplashScreen() {
 
 useEffect(() => {
   const timer = setTimeout(() => {
-    navigation.replace('Criarconta'); // Substitui a tela atual pela tela de login
+    navigation.replace('Login'); // Substitui a tela atual pela tela de login
   }, 2500); // 2.5 segundos
 
   return () => clearTimeout(timer);

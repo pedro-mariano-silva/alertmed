@@ -14,7 +14,7 @@ type NavigationProps = NativeStackNavigationProp<
   'Criarconta'
 >;
 
-export default function Criarconta() {
+export default function recuperaSenha() {
 
 const navigation = useNavigation<NavigationProps>();
 const [usuario, setUsuario] = useState('');
@@ -65,24 +65,12 @@ resizeMode="contain"
 
 
 
-<Text style={styles.title}>Crie sua conta</Text>
+<Text style={styles.title}>RECUPERAR SENHA</Text>
+<Text style={styles.subTitle}>Digite seu e-mail cadastrado, para{'\n'}receber as instruções de redefinição:</Text>
 
 
 
 
-<TextInput
-placeholder="Nome completo"
-placeholderTextColor="#838282"
-style={styles.inputNome}
-value={usuario}
-onChangeText={handleChangeUser}
-keyboardType="email-address"
-autoCapitalize="none"
-selection={usuario.length === 0 ? { start: 0, end: 0 } : undefined}
-/>
-<Feather name="user" size={20} color="black" 
-style={styles.iconUser}
-/>
 
 <TextInput
 placeholder='E-mail'
@@ -93,37 +81,21 @@ style={styles.inputCadEmail}
 style={styles.iconEmail}
 />
 
-<TextInput
-placeholder='Senha'
-style={styles.inputCadSenha}
-
-/>
-<SimpleLineIcons name="lock" size={20} color="black" 
-style={styles.iconSenha}
-/>
 
 
 
 
 
-<TextInput
-placeholder='Repita a senha'
-style={styles.inputCadSenha}
-
-/>
-<SimpleLineIcons name="lock" size={20} color="black" 
-style={styles.iconRepeteSenha}
-/>
 
 
 
 
 
-<TouchableOpacity
+<TouchableOpacity onPress={() => navigation.navigate('linkSenha')}
 style={styles.buttonLogin}
-onPress={criarConta}
+
 >
-<Text style={styles.buttonText}>Criar conta</Text>
+<Text style={styles.buttonText}>Enviar link</Text>
 </TouchableOpacity>
 
 

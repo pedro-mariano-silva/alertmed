@@ -14,7 +14,7 @@ const styles = StyleSheet.create({
     top: '-42%'
   },
   logo: {
-    top: '-25%',
+    top: '-23.5%',
     width: '70%'
   },
   inputNome: {
@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#FFF',
     fontSize: 22,
-    top: 3,
+    top: 4.8,
     fontWeight: 'bold',
     fontFamily: 'Inter_700Bold',
 

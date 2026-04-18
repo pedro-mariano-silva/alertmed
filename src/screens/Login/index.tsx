@@ -124,9 +124,11 @@ onPress={fazerLogin}
 <Text style={styles.buttonText}>Logar</Text>
 </TouchableOpacity>
 
-<Text style={styles.footer}>
-<Text style={styles.textCriar}>Criar conta</Text>
-</Text>
+<TouchableOpacity onPress={() => navigation.navigate('Criarconta')}>
+  <Text style={styles.footer}>
+    <Text style={styles.textCriar}>Criar conta</Text>
+  </Text>
+</TouchableOpacity>
 
 <Image
 source={require('../../../assets/images/line.png')}
@@ -140,9 +142,11 @@ style={styles.line2}
 resizeMode="contain"
 />
 
-<Text style={styles.footer}>
-<Text style={styles.textForgetPassWord}>Esqueci minha senha</Text>
-</Text>
+<TouchableOpacity onPress={() => navigation.navigate('recuperaSenha')}>
+  <Text style={styles.footer}>
+    <Text style={styles.textForgetPassWord}>Esqueci minha senha</Text>
+  </Text>
+</TouchableOpacity>
 
 <View style={styles.rememberContainer}>
 

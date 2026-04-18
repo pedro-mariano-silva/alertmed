@@ -13,4 +13,7 @@ export type RootStackParamList = {
   Login: undefined;
   Novomedicamento: undefined;
   Criarconta: undefined;
+  recuperaSenha: undefined;
+  linkSenha: undefined;
+  criarNovaSenha: undefined;
 };
