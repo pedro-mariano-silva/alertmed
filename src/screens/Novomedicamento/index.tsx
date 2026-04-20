@@ -4,21 +4,21 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RootStackParamList } from '../../navigation/types';
+import { supabase } from '../../lib/supabase';
 import styles from './styles';
 
 type NavigationProps = NativeStackNavigationProp<RootStackParamList, 'Novomedicamento'>;
 
-type MedicamentoItem = {
-  id: string;
-  nome: string;
-  dosagem: string;
-  horarios: string[];
-  diasSelecionados: string[];
+const mapaDiasSemana: Record<string, number> = {
+  DOM: 0,
+  SEG: 1,
+  TER: 2,
+  QUA: 3,
+  QUI: 4,
+  SEX: 5,
+  SAB: 6,
 };
-
-const STORAGE_KEY = '@alertmed_medicamentos';
 
 export default function Novomedicamento() {
   const navigation = useNavigation<NavigationProps>();
@@ -28,6 +28,7 @@ export default function Novomedicamento() {
   const [horarios, setHorarios] = useState<string[]>([]);
   const [mostrarPicker, setMostrarPicker] = useState(false);
   const [horaSelecionada, setHoraSelecionada] = useState(new Date());
+  const [loading, setLoading] = useState(false);
 
   const diasSemana = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB', 'DOM'];
   const [diasSelecionados, setDiasSelecionados] = useState<string[]>([]);
@@ -51,6 +52,7 @@ export default function Novomedicamento() {
       const horaFormatada = date.toLocaleTimeString([], {
         hour: '2-digit',
         minute: '2-digit',
+        hour12: false,
       });
 
       if (!horarios.includes(horaFormatada)) {
@@ -90,28 +92,80 @@ export default function Novomedicamento() {
       return;
     }
 
-    const novoMedicamento: MedicamentoItem = {
-      id: Date.now().toString(),
-      nome: nomeMedicamento.trim(),
-      dosagem: dosagem.trim(),
-      horarios,
-      diasSelecionados,
-    };
-
     try {
-      const dadosSalvos = await AsyncStorage.getItem(STORAGE_KEY);
-      const listaAtual = dadosSalvos ? JSON.parse(dadosSalvos) : [];
+      setLoading(true);
 
-      const listaAtualizada = [novoMedicamento, ...listaAtual];
+      const {
+        data: { user },
+        error: erroUsuario,
+      } = await supabase.auth.getUser();
 
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(listaAtualizada));
+      if (erroUsuario || !user) {
+        Alert.alert('Erro', 'Usuário não autenticado.');
+        return;
+      }
 
-      Alert.alert('Sucesso', 'Medicamento salvo com sucesso.');
+      const { data: medicamentoCriado, error: erroMedicamento } = await supabase
+        .from('medicamentos')
+        .insert([
+          {
+            user_id: user.id,
+            nome: nomeMedicamento.trim(),
+            dosagem: dosagem.trim(),
+            observacoes: null,
+            ativo: true,
+          },
+        ])
+        .select()
+        .single();
 
-      navigation.goBack();
+      if (erroMedicamento || !medicamentoCriado) {
+        console.log('Erro ao salvar medicamento:', erroMedicamento);
+        Alert.alert('Erro', 'Não foi possível salvar o medicamento.');
+        return;
+      }
+
+      const payloadHorarios = horarios.map((horario) => ({
+        medicamento_id: medicamentoCriado.id,
+        horario,
+      }));
+
+      const { error: erroHorarios } = await supabase
+        .from('medicamento_horarios')
+        .insert(payloadHorarios);
+
+      if (erroHorarios) {
+        console.log('Erro ao salvar horários:', erroHorarios);
+        Alert.alert('Erro', 'O medicamento foi criado, mas os horários não puderam ser salvos.');
+        return;
+      }
+
+      const payloadDias = diasSelecionados.map((dia) => ({
+        medicamento_id: medicamentoCriado.id,
+        dia_semana: mapaDiasSemana[dia],
+      }));
+
+      const { error: erroDias } = await supabase
+        .from('medicamento_dias')
+        .insert(payloadDias);
+
+      if (erroDias) {
+        console.log('Erro ao salvar dias:', erroDias);
+        Alert.alert('Erro', 'O medicamento foi criado, mas os dias não puderam ser salvos.');
+        return;
+      }
+
+      Alert.alert('Sucesso', 'Medicamento salvo com sucesso.', [
+        {
+          text: 'OK',
+          onPress: () => navigation.goBack(),
+        },
+      ]);
     } catch (error) {
       console.log('Erro ao salvar medicamento:', error);
       Alert.alert('Erro', 'Não foi possível salvar o medicamento.');
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -209,14 +263,16 @@ export default function Novomedicamento() {
         />
       )}
 
-      <TouchableOpacity onPress={salvarMedicamento}>
+      <TouchableOpacity onPress={salvarMedicamento} disabled={loading}>
         <LinearGradient
           colors={['#FFB300', '#FF8F00']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={styles.buttonSalvar}
         >
-          <Text style={styles.textoBotaoSalvar}>Salvar medicamento</Text>
+          <Text style={styles.textoBotaoSalvar}>
+            {loading ? 'Salvando...' : 'Salvar medicamento'}
+          </Text>
         </LinearGradient>
       </TouchableOpacity>
     </View>

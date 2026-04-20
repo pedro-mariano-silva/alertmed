@@ -7,11 +7,12 @@ import Login from '../screens/Login';
 import Medicamento from '../screens/Medicamento';
 import Novomedicamento from '../screens/Novomedicamento';
 import Criarconta from '../screens/criarconta';
-import recuperaSenha from '../screens/recuperaSenha';
-import linkSenha from '../screens/linkSenha';
-import criarNovaSenha from '../screens/criaNovaSenha';
+import RecuperaSenha from '../screens/recuperaSenha';
+import LinkSenha from '../screens/linkSenha';
+import CriarNovaSenha from '../screens/criaNovaSenha';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+
 
 export default function AppNavigator() {
   return (
@@ -22,10 +23,10 @@ export default function AppNavigator() {
         <Stack.Screen name="Medicamento" component={Medicamento} />
         <Stack.Screen name="Novomedicamento" component={Novomedicamento} />
         <Stack.Screen name="Criarconta" component={Criarconta} />
-        <Stack.Screen name="recuperaSenha" component={recuperaSenha} />
-        <Stack.Screen name="linkSenha" component={linkSenha} />
-        <Stack.Screen name="criarNovaSenha" component={criarNovaSenha} />
+        <Stack.Screen name="recuperaSenha" component={RecuperaSenha} />
+        <Stack.Screen name="linkSenha" component={LinkSenha} />
+        <Stack.Screen name="criarNovaSenha" component={CriarNovaSenha} />
       </Stack.Navigator>
-   
+    
   );
 }

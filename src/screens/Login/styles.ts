@@ -129,6 +129,33 @@ const styles = StyleSheet.create({
 
   },
 
+  containerVersion:{
+    top: -720,
+    left: 145,
+    
+  },
+  versionText:{
+    fontSize: 12,
+    color: '#9C853D',
+    fontFamily: 'Inter_700Bold',
+  },
+
+senhaContainer: {
+  position: 'relative',
+  width: '100%',
+  alignItems: 'center',
+  top: '-35%',
+},
+
+eyeButton: {
+  position: 'absolute',
+  right: 75,
+  top: -28,
+  height: 57,
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+
 });
 
 export default styles;

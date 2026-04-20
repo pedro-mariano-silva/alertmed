@@ -5,35 +5,63 @@ import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
+import { supabase } from '../../lib/supabase';
 import styles from './styles';
 
 type NavigationProps = NativeStackNavigationProp<
   RootStackParamList,
-  'Criarconta'
+  'criarNovaSenha'
 >;
 
 export default function CriarNovaSenha() {
   const navigation = useNavigation<NavigationProps>();
 
-  const [usuario, setUsuario] = useState('');
   const [senha, setSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
   const [mostrarNovaSenha, setMostrarNovaSenha] = useState(false);
   const [mostrarConfirmarSenha, setMostrarConfirmarSenha] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  async function criarConta() {
+  async function salvarNovaSenha() {
     if (!senha || !confirmarSenha) {
       Alert.alert('Atenção', 'Preencha os dois campos de senha.');
       return;
     }
 
-    if (senha !== confirmarSenha) {
-      Alert.alert('Ops!', 'As senhas são diferentes. Por favor, tente novamente');
+    if (senha.length < 6) {
+      Alert.alert('Atenção', 'A senha deve ter pelo menos 6 caracteres.');
       return;
     }
 
-    Alert.alert('Sucesso', 'Senha criada com sucesso!');
-    navigation.navigate('Login');
+    if (senha !== confirmarSenha) {
+      Alert.alert('Ops!', 'As senhas são diferentes. Por favor, tente novamente.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const { error } = await supabase.auth.updateUser({
+        password: senha,
+      });
+
+      if (error) {
+        Alert.alert('Erro', error.message);
+        return;
+      }
+
+      Alert.alert('Sucesso', 'Senha redefinida com sucesso!', [
+        {
+          text: 'OK',
+          onPress: () => navigation.navigate('Login'),
+        },
+      ]);
+    } catch (error) {
+      console.log('Erro ao redefinir senha:', error);
+      Alert.alert('Erro', 'Não foi possível redefinir a senha.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -49,11 +77,13 @@ export default function CriarNovaSenha() {
       <View>
         <TextInput
           placeholder="Nova senha"
+          placeholderTextColor="#838282"
           style={styles.inputCadSenha}
           value={senha}
           onChangeText={setSenha}
           secureTextEntry={!mostrarNovaSenha}
           autoCapitalize="none"
+          autoCorrect={false}
         />
 
         <SimpleLineIcons
@@ -78,11 +108,13 @@ export default function CriarNovaSenha() {
       <View>
         <TextInput
           placeholder="Confirme a nova senha"
+          placeholderTextColor="#838282"
           style={styles.inputCadSenha}
           value={confirmarSenha}
           onChangeText={setConfirmarSenha}
           secureTextEntry={!mostrarConfirmarSenha}
           autoCapitalize="none"
+          autoCorrect={false}
         />
 
         <SimpleLineIcons
@@ -106,9 +138,12 @@ export default function CriarNovaSenha() {
 
       <TouchableOpacity
         style={styles.buttonCriarNovaSenha}
-        onPress={criarConta}
+        onPress={salvarNovaSenha}
+        disabled={loading}
       >
-        <Text style={styles.buttonText}>Salvar senha</Text>
+        <Text style={styles.buttonText}>
+          {loading ? 'Salvando...' : 'Salvar senha'}
+        </Text>
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => navigation.navigate('Login')}>

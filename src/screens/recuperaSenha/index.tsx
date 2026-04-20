@@ -1,109 +1,96 @@
 import { View, Text, Image, TextInput, TouchableOpacity, Alert } from 'react-native';
-import Feather from '@expo/vector-icons/Feather';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import SimpleLineIcons from '@expo/vector-icons/SimpleLineIcons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
+import { supabase } from '../../lib/supabase';
 import styles from './styles';
 
 type NavigationProps = NativeStackNavigationProp<
   RootStackParamList,
-  'Criarconta'
+  'recuperaSenha'
 >;
 
-export default function recuperaSenha() {
+export default function RecuperaSenha() {
+  const navigation = useNavigation<NavigationProps>();
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
 
-const navigation = useNavigation<NavigationProps>();
-const [usuario, setUsuario] = useState('');
-const [senha, setSenha] = useState('');
-const [email, setEmail] = useState('');
-const [lembrar, setLembrar] = useState(false);
-const [mostrarCursor, setMostrarCursor] = useState(false);
-
-const handleChangeUser = (text: string) => {
-  setUsuario(text);
-
-  if (text.length === 0) {
-    setMostrarCursor(false);
+async function enviarLinkRecuperacao() {
+  if (!email.trim()) {
+    Alert.alert('Atenção', 'Digite seu e-mail.');
+    return;
   }
-};
 
-const handleChangeSenha = (text: string) => {
-  setSenha(text);
+  try {
+    setLoading(true);
 
-  if (text.length === 0) {
-    setMostrarCursor(false);
+    const { error } = await supabase.auth.resetPasswordForEmail(
+      email.trim(),
+      {
+        redirectTo: 'alertmed://reset-password',
+      }
+    );
+
+    if (error) {
+      Alert.alert('Erro', error.message);
+      return;
+    }
+
+    // 🔥 ALTERAÇÃO AQUI
+    navigation.navigate('linkSenha');
+
+  } catch (error) {
+    console.log('Erro ao enviar link de recuperação:', error);
+    Alert.alert('Erro', 'Não foi possível enviar o link de recuperação.');
+  } finally {
+    setLoading(false);
   }
-};
-
-
-
-
-
-
-
-async function criarConta(){
-
-
-
-
 }
 
-return (
+  return (
+    <View style={styles.container}>
+      <Image
+        source={require('../../../assets/images/logo.png')}
+        style={styles.logo}
+        resizeMode="contain"
+      />
 
-<View style={styles.container}>
-  
+      <Text style={styles.title}>RECUPERAR SENHA</Text>
 
-<Image
-source={require('../../../assets/images/logo.png')}
-style={styles.logo}
-resizeMode="contain"
-/>
+      <Text style={styles.subTitle}>
+        Digite seu e-mail cadastrado, para{'\n'}
+        receber as instruções de redefinição:
+      </Text>
 
+      <TextInput
+        placeholder="E-mail"
+        placeholderTextColor="#838282"
+        style={styles.inputCadEmail}
+        value={email}
+        onChangeText={setEmail}
+        keyboardType="email-address"
+        autoCapitalize="none"
+        autoCorrect={false}
+      />
 
+      <MaterialIcons
+        name="alternate-email"
+        size={20}
+        color="black"
+        style={styles.iconEmail}
+      />
 
-<Text style={styles.title}>RECUPERAR SENHA</Text>
-<Text style={styles.subTitle}>Digite seu e-mail cadastrado, para{'\n'}receber as instruções de redefinição:</Text>
-
-
-
-
-
-<TextInput
-placeholder='E-mail'
-style={styles.inputCadEmail}
-
-/>
-<MaterialIcons name="alternate-email" size={20} color="black"
-style={styles.iconEmail}
-/>
-
-
-
-
-
-
-
-
-
-
-
-<TouchableOpacity onPress={() => navigation.navigate('linkSenha')}
-style={styles.buttonLogin}
-
->
-<Text style={styles.buttonText}>Enviar link</Text>
-</TouchableOpacity>
-
-
-
-
-
-
-</View>
-
-);
+      <TouchableOpacity
+        onPress={enviarLinkRecuperacao}
+        style={styles.buttonLogin}
+        disabled={loading}
+      >
+        <Text style={styles.buttonText}>
+          {loading ? 'Enviando...' : 'Enviar link'}
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
 }

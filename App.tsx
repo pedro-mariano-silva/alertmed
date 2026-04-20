@@ -4,6 +4,15 @@ import { View, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import AppNavigator from './src/navigation/AppNavigator';
 
+const linking = {
+  prefixes: ['alertmed://'],
+  config: {
+    screens: {
+      criarNovaSenha: 'reset-password',
+    },
+  },
+};
+
 export default function App() {
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
@@ -19,7 +28,7 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer linking={linking}>
       <AppNavigator />
     </NavigationContainer>
   );

@@ -165,6 +165,31 @@ const styles = StyleSheet.create({
 
   },
 
+  senhaContainer: {
+  position: 'relative',
+  width: '100%',
+  alignItems: 'center',
+  top: '-41.0%',
+},
+
+eyeButtonSenha: {
+  position: 'absolute',
+  right: 45,
+  top: -31,
+  height: 57,
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+
+eyeButtonRepeteSenha: {
+  position: 'absolute',
+  right: 45,
+  top: -30,
+  height: 57,
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+
 });
 
 export default styles;
